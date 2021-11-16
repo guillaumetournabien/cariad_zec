@@ -2225,6 +2225,7 @@
         "persist": false,
         "proxy": "",
         "authType": "",
+        "senderr": false,
         "x": 900,
         "y": 300,
         "wires": [
@@ -2600,6 +2601,7 @@
         "append": "",
         "useSpawn": "false",
         "timer": "",
+        "winHide": false,
         "oldrc": false,
         "name": "",
         "x": 670,
@@ -2688,6 +2690,7 @@
         "append": "",
         "useSpawn": "false",
         "timer": "",
+        "winHide": false,
         "oldrc": false,
         "name": "Copy new version",
         "x": 1090,
@@ -3868,36 +3871,21 @@
         "wires": []
     },
     {
-        "id": "7a2bc9bd80914f54",
-        "type": "e-mail",
-        "z": "49ede7b4.4b2d88",
-        "server": "smtp.gmail.com",
-        "port": "465",
-        "secure": false,
-        "tls": false,
-        "name": "leo.delas@aptiv.com",
-        "dname": "",
-        "x": 740,
-        "y": 660,
-        "wires": []
-    },
-    {
         "id": "4cfbb894e7fc29e9",
         "type": "ip",
         "z": "49ede7b4.4b2d88",
-        "name": "ip",
+        "name": "Get IPv4",
         "https": false,
         "timeout": "5000",
         "internalIPv4": true,
         "internalIPv6": false,
         "publicIPv4": false,
         "publicIPv6": false,
-        "x": 300,
-        "y": 660,
+        "x": 560,
+        "y": 720,
         "wires": [
             [
-                "c76191f7d2e671ba",
-                "149f52920a19dc6b"
+                "b152486ad7da7912"
             ]
         ]
     },
@@ -3905,7 +3893,7 @@
         "id": "70380a9d9cacf6bc",
         "type": "inject",
         "z": "49ede7b4.4b2d88",
-        "name": "",
+        "name": "Inject 20sec after boot",
         "props": [
             {
                 "p": "payload"
@@ -3914,70 +3902,112 @@
         "repeat": "",
         "crontab": "",
         "once": true,
-        "onceDelay": "5",
+        "onceDelay": "20",
         "topic": "",
         "payloadType": "date",
-        "x": 110,
-        "y": 660,
+        "x": 160,
+        "y": 720,
         "wires": [
             [
-                "4cfbb894e7fc29e9"
+                "763752835e5de205",
+                "626f33cb9594fd7f"
             ]
         ]
     },
     {
-        "id": "c76191f7d2e671ba",
-        "type": "debug",
-        "z": "49ede7b4.4b2d88",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 460,
-        "y": 740,
-        "wires": []
-    },
-    {
-        "id": "149f52920a19dc6b",
+        "id": "b152486ad7da7912",
         "type": "function",
         "z": "49ede7b4.4b2d88",
-        "name": "",
-        "func": "var local_msg = RED.util.cloneMessage(msg);\nflow.set(\"IP\", local_msg.payload.internalIPv4);\n\nvar email = {};\n\nemail.topic = \"Rapsberry pi IP Address\";\nemail.payload = \"I've successfully connected to the network and my ip adress is : \" + local_msg.payload.internalIPv4;\n\nreturn email;",
+        "name": "Create mail body",
+        "func": "var local_msg = RED.util.cloneMessage(msg);\nflow.set(\"IP\", local_msg.payload.internalIPv4);\n\nvar mac = flow.get(\"MAC\");\n\nvar email = {};\nemail.from = \"RPI Aptiv<leo.delas@aptiv.com>\";\nemail.topic = \"IP Address for RPI\";\nemail.payload = \"My IP is : \" + local_msg.payload.internalIPv4 + \"\\nMy MAC Address is : \" + mac;\n\nreturn email;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 660,
+        "x": 750,
+        "y": 720,
         "wires": [
             [
-                "8ce3ecf16362200d",
-                "7a2bc9bd80914f54"
+                "35d89403461da20b"
             ]
         ]
     },
     {
-        "id": "8ce3ecf16362200d",
-        "type": "debug",
+        "id": "35d89403461da20b",
+        "type": "e-mail",
+        "z": "49ede7b4.4b2d88",
+        "server": "mail.delphiauto.com",
+        "port": "25",
+        "secure": false,
+        "tls": false,
+        "name": "leo.delas@aptiv.com",
+        "dname": "Send Mail (Double click to change the receiver)",
+        "x": 1050,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "763752835e5de205",
+        "type": "exec",
+        "z": "49ede7b4.4b2d88",
+        "command": "ip",
+        "addpay": "",
+        "append": "link show | grep ether | head -1",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "Get Mac Address",
+        "x": 410,
+        "y": 780,
+        "wires": [
+            [
+                "05e88031a68ed699"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "05e88031a68ed699",
+        "type": "function",
+        "z": "49ede7b4.4b2d88",
+        "name": "Format MAC address",
+        "func": "var local_msg = RED.util.cloneMessage(msg);\nvar separator = \" \";\n\nlocal_msg.payload = local_msg.payload.trim();\nlocal_msg.payload = local_msg.payload.split(separator);\nlocal_msg.payload = local_msg.payload[1];\nlocal_msg.payload = local_msg.payload.toUpperCase();\n\nflow.set(\"MAC\", local_msg.payload);\n\nreturn local_msg;",
+        "outputs": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "626f33cb9594fd7f",
+        "type": "delay",
         "z": "49ede7b4.4b2d88",
         "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 650,
-        "y": 740,
-        "wires": []
+        "pauseType": "delay",
+        "timeout": "100",
+        "timeoutUnits": "milliseconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 390,
+        "y": 720,
+        "wires": [
+            [
+                "4cfbb894e7fc29e9"
+            ]
+        ]
     },
     {
         "id": "5922b67.4b2ed48",
